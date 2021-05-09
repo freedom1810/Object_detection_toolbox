@@ -11,7 +11,11 @@ class ImageAnno():
         self.annotations = []
     
     def update_anno(self, anno):
+        '''
+        anno format: [[x, y, w, h], class_id]
+        '''
         self.annotations.append(anno)
+        
     
     def draw_bbox(self, folder_image_dir):
         color = (255, 255, 255)
@@ -25,7 +29,8 @@ class ImageAnno():
         image = cv2.imread('{}/{}'.format(folder_image_dir, self.file_name))
         
         for anno in self.annotations:
-            class_id, xmin, ymin, w, h = anno
+            (xmin, ymin, w, h), class_id = anno
+
             xmax = xmin + w
             ymax = ymin + h
             
@@ -40,6 +45,7 @@ class ImageAnno():
             image = cv2.putText(image, '{}'.format(class_id) , org, font, fontScale, color_text, thickness_text, cv2.LINE_AA)
             
         return image
+            
 
 def read_json(train_json_dir):
     
@@ -72,7 +78,7 @@ def read_json(train_json_dir):
         image_id = anno['image_id']
         category_id = anno['category_id']
         bbox = anno['bbox']
-        anno_info = [category_id] + bbox
+        anno_info = [bbox, category_id]
         data[image_id].update_anno(anno_info)
     
     return data
