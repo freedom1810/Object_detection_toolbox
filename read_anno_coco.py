@@ -5,7 +5,7 @@ import cv2
 class ImageAnno():
     def __init__(self, file_name, height, width, image_id):
         self.file_name = file_name
-        self.hight = height
+        self.height = height
         self.width = width
         self.id = image_id
         self.annotations = []
@@ -47,14 +47,18 @@ class ImageAnno():
         return image
             
 
-def read_json(train_json_dir):
-    
-    with open(train_json_dir, 'r') as train_dir:
-        data_train = json.load(train_dir)
+def read_json(data_json):
+    '''
+    Convert coco json format to ImageAnno
+
+    Input: json file 
+
+    Output: dict{image_id: ImageAnno}
+    '''
 
     data = {}
 
-    for image_info in data_train['images']:
+    for image_info in data_json['images']:
     #     {'file_name': '4289.png',
     #      'height': 626,
     #      'width': 1622,
@@ -67,7 +71,7 @@ def read_json(train_json_dir):
                             image_info['id']
                             )
 
-    for anno in data_train['annotations']:
+    for anno in data_json['annotations']:
 #     {'segmentation': [],
 #      'area': 342,
 #      'iscrowd': 0,
@@ -83,10 +87,55 @@ def read_json(train_json_dir):
     
     return data
 
+def data2json(data):
+    '''
+    Convert ImageAnno to coco json format 
+
+    Input: dict{image_id: ImageAnno}
+
+    Output: json file 
+    '''
+
+    data_json = {'images': [],
+                'annotations': []}
+    
+    anno_id = 0
+    for image_id in data:
+        # print(data[image_id].annotations)
+
+        image_info = {'width' : data[image_id].width,
+                        'height' : data[image_id].height,
+                        'id' : data[image_id].id,
+                        'file_name' : data[image_id].file_name,
+                        }
+        data_json['images'].append(image_info)
+
+        for anno in data[image_id].annotations:
+
+            bbox, category_id = anno
+            x,y,w,h = bbox
+
+            anno_info = {'segmentation': [],
+                            'area': w*h,
+                            'iscrowd': 0,
+                            'image_id': image_id,
+                            'bbox': bbox,
+                            'category_id': category_id,
+                            'id': anno_id}
+            anno_id += 1
+
+            data_json['annotations'].append(anno_info)
+
+    return data_json
+
 if __name__ == "__main__":
     train_json_dir = '/media/sonnh/ssd/data/zalo_2020/traffic_train/train_traffic_sign_dataset.json'
 
+    with open(train_json_dir, 'r') as train_dir:
+        data_json = json.load(train_dir)
+
     data = read_json(train_json_dir)
+    data_json = data2json(data)
 
     image_after_draw = data[3].draw_bbox('/media/sonnh/ssd/data/zalo_2020/traffic_train/images')
     folder_test_dir = '/media/sonnh/Object_detection_toolbox/test'

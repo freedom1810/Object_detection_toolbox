@@ -2,7 +2,7 @@ import json
 import numpy 
 import cv2
 
-from read_anno_coco import read_json
+from read_anno_coco import read_json, data2json
 from eda import count_bbox
 from utils import bbox_iou, xywh2xyxy, merge_bbox
 
@@ -44,7 +44,12 @@ def merge_overlap_bbox(data, iou_threshold = 0.45):
 
 if __name__ == "__main__":
     train_json_dir = '/media/sonnh/ssd/data/zalo_2020/traffic_train/train_traffic_sign_dataset.json'
-    data = read_json(train_json_dir)
+    
+    with open(train_json_dir, 'r') as train_dir:
+        data_json = json.load(train_dir)
+        
+    data = read_json(data_json)
+
     print('Before merge')
     count_bbox(data)
 
@@ -52,4 +57,11 @@ if __name__ == "__main__":
 
     print('After merge')
     count_bbox(data)
+
+
+    data_json_merge_overlap_bbox = data2json(data)
+    train_json_dir_merge_overlap_bbox = '/media/sonnh/ssd/data/zalo_2020/traffic_train/train_traffic_sign_dataset_merge_overlap_bbox.json'
+
+    with open(train_json_dir_merge_overlap_bbox, 'w') as train_dir:
+        json.dump(data_json_merge_overlap_bbox, train_dir)
 
