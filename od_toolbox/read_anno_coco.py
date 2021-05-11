@@ -12,14 +12,20 @@ class ImageAnno():
     
     def update_anno(self, anno):
         '''
-        anno format: [[x, y, w, h], class_id]
+        anno format:{'segmentation': [],
+                    'area': 342,
+                    'iscrowd': 0,
+                    'image_id': 3,
+                    'bbox': [880, 333, 19, 18],
+                    'category_id': 2,
+                    'id': 0}
         '''
         self.annotations.append(anno)
         
     
     def draw_bbox(self, folder_image_dir):
         color = (255, 255, 255)
-        thickness = 3
+        thickness = 1
         
         fontScale = 0.5
         font = cv2.FONT_HERSHEY_SIMPLEX
@@ -29,7 +35,8 @@ class ImageAnno():
         image = cv2.imread('{}/{}'.format(folder_image_dir, self.file_name))
         
         for anno in self.annotations:
-            (xmin, ymin, w, h), class_id = anno
+            (xmin, ymin, w, h) = anno['bbox']
+            class_id = anno['category_id']
 
             xmax = xmin + w
             ymax = ymin + h
@@ -72,18 +79,15 @@ def read_json(data_json):
                             )
 
     for anno in data_json['annotations']:
-#     {'segmentation': [],
-#      'area': 342,
-#      'iscrowd': 0,
-#      'image_id': 3,
-#      'bbox': [880, 333, 19, 18],
-#      'category_id': 2,
-#      'id': 0}
+    # {'segmentation': [],
+    #  'area': 342,
+    #  'iscrowd': 0,
+    #  'image_id': 3,
+    #  'bbox': [880, 333, 19, 18],
+    #  'category_id': 2,
+    #  'id': 0}
         image_id = anno['image_id']
-        category_id = anno['category_id']
-        bbox = anno['bbox']
-        anno_info = [bbox, category_id]
-        data[image_id].update_anno(anno_info)
+        data[image_id].update_anno(anno)
     
     return data
 
@@ -112,19 +116,7 @@ def data2json(data):
 
         for anno in data[image_id].annotations:
 
-            bbox, category_id = anno
-            x,y,w,h = bbox
-
-            anno_info = {'segmentation': [],
-                            'area': w*h,
-                            'iscrowd': 0,
-                            'image_id': image_id,
-                            'bbox': bbox,
-                            'category_id': category_id,
-                            'id': anno_id}
-            anno_id += 1
-
-            data_json['annotations'].append(anno_info)
+            data_json['annotations'].append(anno)
 
     return data_json
 
@@ -134,8 +126,7 @@ if __name__ == "__main__":
     with open(train_json_dir, 'r') as train_dir:
         data_json = json.load(train_dir)
 
-    data = read_json(train_json_dir)
-    data_json = data2json(data)
+    data = read_json(data_json)
 
     image_after_draw = data[3].draw_bbox('/media/sonnh/ssd/data/zalo_2020/traffic_train/images')
     folder_test_dir = '/media/sonnh/Object_detection_toolbox/test'
